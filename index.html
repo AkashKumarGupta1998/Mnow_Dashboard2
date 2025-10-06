@@ -13,78 +13,67 @@
         .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         .kpi-card { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .chart-container { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-top: 20px; }
         th, td { padding: 12px; text-align: center; border-bottom: 1px solid #ddd; }
         th { background: #2c3e50; color: white; }
         .progress-bar { background: #ecf0f1; height: 10px; border-radius: 5px; overflow: hidden; margin: 5px 0; }
         .progress-fill { height: 100%; transition: width 0.3s; }
         .loading { text-align: center; padding: 40px; color: #666; }
-        .btn { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-size: 16px; }
+        .btn { background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
         .btn:hover { background: #2980b9; }
-        .btn-success { background: #27ae60; }
-        .btn-success:hover { background: #219653; }
-        .notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 5px; color: white; z-index: 1000; }
-        .success { background: #27ae60; }
-        .error { background: #e74c3c; }
+        .store-name { text-align: left; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="dashboard">
         <div class="header">
             <h1>🏪 Mnow Stores Performance Dashboard</h1>
-            <p>Live data from Google Sheets | <span id="lastUpdated"></span></p>
-            <div>
-                <button class="btn" onclick="loadData()">🔄 Refresh Data</button>
-                <button class="btn btn-success" onclick="showInstructions()">📖 Instructions</button>
-            </div>
+            <p>Live data from Google Sheets</p>
+            <button class="btn" onclick="loadData()">🔄 Refresh Data</button>
+            <span id="status"></span>
         </div>
 
         <div id="loading" class="loading">
-            <h3>🔄 Loading data from Google Sheets...</h3>
-            <p>Please wait while we fetch the latest data</p>
+            <h3>Loading data from Google Sheets...</h3>
         </div>
 
         <div id="content" style="display: none;">
             <div class="kpi-grid">
                 <div class="kpi-card">
                     <h3>Total Attainment</h3>
-                    <div class="kpi-value" id="totalAttainment" style="font-size: 24px; font-weight: bold; color: #2c3e50;">0</div>
-                    <p style="color: #666; font-size: 12px;">6AM - 10AM</p>
+                    <div class="kpi-value" id="totalAttainment">0</div>
                 </div>
                 <div class="kpi-card">
                     <h3>Attainment Rate</h3>
-                    <div class="kpi-value" id="attainmentRate" style="font-size: 24px; font-weight: bold; color: #27ae60;">0%</div>
-                    <p style="color: #666; font-size: 12px;">vs Projection</p>
+                    <div class="kpi-value" id="attainmentRate">0%</div>
                 </div>
                 <div class="kpi-card">
                     <h3>Vs Projection</h3>
-                    <div class="kpi-value" id="vsProjection" style="font-size: 24px; font-weight: bold; color: #e74c3c;">0%</div>
-                    <p style="color: #666; font-size: 12px;">Performance</p>
+                    <div class="kpi-value" id="vsProjection">0%</div>
                 </div>
                 <div class="kpi-card">
                     <h3>Vs Yesterday</h3>
-                    <div class="kpi-value" id="vsYesterday" style="font-size: 24px; font-weight: bold; color: #e74c3c;">0%</div>
-                    <p style="color: #666; font-size: 12px;">Trend</p>
+                    <div class="kpi-value" id="vsYesterday">0%</div>
                 </div>
             </div>
 
             <div class="chart-container">
-                <h2>📈 Overall Hourly Trend (All Stores)</h2>
+                <h2>Overall Hourly Trend</h2>
                 <canvas id="trendChart" height="80"></canvas>
             </div>
 
             <div class="chart-container">
-                <h2>🏪 Store Performance Comparison</h2>
+                <h2>Store Performance</h2>
                 <canvas id="performanceChart" height="80"></canvas>
             </div>
 
             <div class="chart-container">
-                <h2>📊 Store-wise Hourly Performance</h2>
+                <h2>Store-wise Performance</h2>
                 <table>
                     <thead>
                         <tr>
                             <th>Store</th><th>6AM</th><th>7AM</th><th>8AM</th><th>9AM</th><th>10AM</th>
-                            <th>Total</th><th>Achievement</th><th>Progress</th>
+                            <th>Total</th><th>Achievement</th>
                         </tr>
                     </thead>
                     <tbody id="storesTable">
@@ -96,37 +85,29 @@
 
     <script>
         // ⚠️ REPLACE THIS WITH YOUR ACTUAL WEB APP URL ⚠️
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxUn8Em4ama90ZUpMJdBDXnBNNh7Gol2rkr4HTxkQBSvYJHXg1VcR3jTlKKoud3bcpP/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyAx_Rh8hVXEQf804nNrPojhIHSZCrQfnDtWqxPrMNZ-swc8xIE2T___Q17buFMU7jz/exec';
         
         let storeData = {};
-        let trendChart, performanceChart;
 
         async function loadData() {
             showLoading();
-            showNotification('🔄 Fetching data from Google Sheets...', 'success');
+            document.getElementById('status').textContent = 'Loading...';
             
             try {
-                // Add timestamp to avoid caching
-                const url = WEB_APP_URL + '?t=' + new Date().getTime();
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
+                const response = await fetch(WEB_APP_URL);
                 const result = await response.json();
                 
                 if (result.success) {
                     storeData = result.data;
                     initializeDashboard();
-                    showNotification('✅ Data loaded successfully!', 'success');
+                    document.getElementById('status').textContent = '✓ Data loaded';
                 } else {
-                    throw new Error(result.error || 'Unknown error');
+                    throw new Error(result.error);
                 }
             } catch (error) {
-                console.error('Error loading data:', error);
-                showNotification('❌ Using sample data: ' + error.message, 'error');
-                // Fallback to sample data
+                console.error('Error:', error);
+                document.getElementById('status').textContent = '✗ Using sample data';
+                // Use sample data
                 loadSampleData();
                 initializeDashboard();
             }
@@ -135,22 +116,22 @@
         function loadSampleData() {
             storeData = {
                 projection: {
-                    "Janakpuri Mnow SF": {"6":4,"7":12,"8":20,"9":29,"10":33,"11":35,"12":42,"13":44,"14":41,"15":41,"16":41,"17":38,"18":44,"19":41,"20":36,"21":32,"22":28},
-                    "UttamNagar Mnow SF": {"6":6,"7":19,"8":32,"9":46,"10":52,"11":55,"12":67,"13":69,"14":65,"15":66,"16":65,"17":60,"18":70,"19":65,"20":57,"21":51,"22":44},
-                    "Dwarka Mnow SF": {"6":3,"7":9,"8":16,"9":23,"10":26,"11":27,"12":34,"13":35,"14":33,"15":33,"16":32,"17":30,"18":35,"19":33,"20":29,"21":26,"22":22},
-                    "Mandawali Mnow SF": {"6":4,"7":11,"8":20,"9":28,"10":32,"11":33,"12":41,"13":42,"14":40,"15":40,"16":39,"17":37,"18":43,"19":40,"20":35,"21":31,"22":27}
+                    "Janakpuri Mnow SF": {"6":4,"7":12,"8":20,"9":29,"10":33},
+                    "UttamNagar Mnow SF": {"6":6,"7":19,"8":32,"9":46,"10":52},
+                    "Dwarka Mnow SF": {"6":3,"7":9,"8":16,"9":23,"10":26},
+                    "Mandawali Mnow SF": {"6":4,"7":11,"8":20,"9":28,"10":32}
                 },
                 attainment: {
-                    "Janakpuri Mnow SF": {"6":5,"7":15,"8":22,"9":43,"10":37,"11":null,"12":null,"13":null,"14":null,"15":null,"16":null,"17":null,"18":null,"19":null,"20":null,"21":null,"22":null},
-                    "UttamNagar Mnow SF": {"6":6,"7":17,"8":28,"9":46,"10":52,"11":null,"12":null,"13":null,"14":null,"15":null,"16":null,"17":null,"18":null,"19":null,"20":null,"21":null,"22":null},
-                    "Dwarka Mnow SF": {"6":2,"7":9,"8":22,"9":29,"10":26,"11":null,"12":null,"13":null,"14":null,"15":null,"16":null,"17":null,"18":null,"19":null,"20":null,"21":null,"22":null},
-                    "Mandawali Mnow SF": {"6":1,"7":4,"8":20,"9":33,"10":32,"11":null,"12":null,"13":null,"14":null,"15":null,"16":null,"17":null,"18":null,"19":null,"20":null,"21":null,"22":null}
+                    "Janakpuri Mnow SF": {"6":5,"7":15,"8":22,"9":43,"10":37},
+                    "UttamNagar Mnow SF": {"6":6,"7":17,"8":28,"9":46,"10":52},
+                    "Dwarka Mnow SF": {"6":2,"7":9,"8":22,"9":29,"10":26},
+                    "Mandawali Mnow SF": {"6":1,"7":4,"8":20,"9":33,"10":32}
                 },
                 yesterday: {
-                    "Janakpuri Mnow SF": {"6":7,"7":14,"8":16,"9":45,"10":34,"11":34,"12":39,"13":54,"14":49,"15":48,"16":45,"17":59,"18":56,"19":51,"20":44,"21":37,"22":37},
-                    "UttamNagar Mnow SF": {"6":2,"7":27,"8":28,"9":36,"10":56,"11":60,"12":49,"13":48,"14":51,"15":55,"16":54,"17":46,"18":57,"19":48,"20":53,"21":68,"22":43},
-                    "Dwarka Mnow SF": {"6":2,"7":5,"8":16,"9":33,"10":29,"11":34,"12":41,"13":34,"14":45,"15":39,"16":45,"17":42,"18":36,"19":33,"20":36,"21":39,"22":29},
-                    "Mandawali Mnow SF": {"6":2,"7":13,"8":20,"9":26,"10":39,"11":41,"12":51,"13":50,"14":47,"15":46,"16":55,"17":45,"18":51,"19":45,"20":34,"21":40,"22":39}
+                    "Janakpuri Mnow SF": {"6":7,"7":14,"8":16,"9":45,"10":34},
+                    "UttamNagar Mnow SF": {"6":2,"7":27,"8":28,"9":36,"10":56},
+                    "Dwarka Mnow SF": {"6":2,"7":5,"8":16,"9":33,"10":29},
+                    "Mandawali Mnow SF": {"6":2,"7":13,"8":20,"9":26,"10":39}
                 }
             };
         }
@@ -159,7 +140,6 @@
             calculateKPIs();
             createCharts();
             populateTable();
-            updateLastUpdated();
             hideLoading();
         }
 
@@ -178,19 +158,14 @@
                 totalYesterday += yesterday;
             });
 
-            const attainmentRate = totalProjected > 0 ? ((totalAttained / totalProjected) * 100).toFixed(1) : 0;
-            const vsProjection = totalProjected > 0 ? ((totalAttained - totalProjected) / totalProjected * 100).toFixed(1) : 0;
-            const vsYesterday = totalYesterday > 0 ? ((totalAttained - totalYesterday) / totalYesterday * 100).toFixed(1) : 0;
+            const attainmentRate = ((totalAttained / totalProjected) * 100).toFixed(1);
+            const vsProjection = ((totalAttained - totalProjected) / totalProjected * 100).toFixed(1);
+            const vsYesterday = ((totalAttained - totalYesterday) / totalYesterday * 100).toFixed(1);
 
             document.getElementById('totalAttainment').textContent = totalAttained;
             document.getElementById('attainmentRate').textContent = attainmentRate + '%';
             document.getElementById('vsProjection').textContent = vsProjection + '%';
             document.getElementById('vsYesterday').textContent = vsYesterday + '%';
-
-            // Color code the values
-            document.getElementById('attainmentRate').style.color = attainmentRate >= 90 ? '#27ae60' : attainmentRate >= 70 ? '#f39c12' : '#e74c3c';
-            document.getElementById('vsProjection').style.color = vsProjection >= 0 ? '#27ae60' : '#e74c3c';
-            document.getElementById('vsYesterday').style.color = vsYesterday >= 0 ? '#27ae60' : '#e74c3c';
         }
 
         function sumFirstNHours(hoursObj, n) {
@@ -202,86 +177,51 @@
         }
 
         function createCharts() {
-            // Destroy existing charts
-            if (trendChart) trendChart.destroy();
-            if (performanceChart) performanceChart.destroy();
-
             // Trend Chart
             const trendCtx = document.getElementById('trendChart').getContext('2d');
-            trendChart = new Chart(trendCtx, {
+            new Chart(trendCtx, {
                 type: 'line',
-                data: getTrendChartData(),
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
-                    }
+                data: {
+                    labels: ['6AM', '7AM', '8AM', '9AM', '10AM'],
+                    datasets: [
+                        {
+                            label: 'Projection',
+                            data: [43, 127, 220, 313, 353],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            fill: true
+                        },
+                        {
+                            label: 'Attainment',
+                            data: [39, 105, 225, 330, 367],
+                            borderColor: '#27ae60',
+                            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                            fill: true
+                        }
+                    ]
                 }
             });
 
             // Performance Chart
             const perfCtx = document.getElementById('performanceChart').getContext('2d');
-            performanceChart = new Chart(perfCtx, {
+            new Chart(perfCtx, {
                 type: 'bar',
-                data: getPerformanceChartData(),
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
-                    }
+                data: {
+                    labels: Object.keys(storeData.projection),
+                    datasets: [
+                        {
+                            label: 'Projected',
+                            data: Object.values(storeData.projection).map(s => sumFirstNHours(s, 5)),
+                            backgroundColor: '#3498db'
+                        },
+                        {
+                            label: 'Attained',
+                            data: Object.values(storeData.attainment).map(s => sumFirstNHours(s, 5)),
+                            backgroundColor: '#27ae60'
+                        }
+                    ]
                 }
             });
-        }
-
-        function getTrendChartData() {
-            const hours = [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22];
-            const projectionSums = hours.map(hour => 
-                Object.values(storeData.projection).reduce((sum, store) => sum + (store[hour] || 0), 0)
-            );
-            const attainmentSums = hours.map(hour =>
-                Object.values(storeData.attainment).reduce((sum, store) => sum + (store[hour] || 0), 0)
-            );
-
-            return {
-                labels: hours.map(h => h + (h < 12 ? 'AM' : 'PM')),
-                datasets: [
-                    {
-                        label: 'Projection',
-                        data: projectionSums,
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Attainment',
-                        data: attainmentSums,
-                        borderColor: '#27ae60',
-                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }
-                ]
-            };
-        }
-
-        function getPerformanceChartData() {
-            const stores = Object.keys(storeData.projection);
-            const attainmentRates = stores.map(store => {
-                const projected = sumFirstNHours(storeData.projection[store], 5);
-                const attained = sumFirstNHours(storeData.attainment[store], 5);
-                return projected > 0 ? ((attained / projected) * 100).toFixed(1) : 0;
-            });
-
-            return {
-                labels: stores,
-                datasets: [{
-                    label: 'Attainment Rate %',
-                    data: attainmentRates,
-                    backgroundColor: ['#3498db', '#27ae60', '#e74c3c', '#f39c12', '#9b59b6'],
-                    borderWidth: 2
-                }]
-            };
         }
 
         function populateTable() {
@@ -292,33 +232,28 @@
                 const attainment = storeData.attainment[store];
                 const projected = sumFirstNHours(storeData.projection[store], 5);
                 const attained = sumFirstNHours(attainment, 5);
-                const achievement = projected > 0 ? ((attained / projected) * 100).toFixed(1) : 0;
-                const progressColor = getProgressColor(achievement);
+                const achievement = ((attained / projected) * 100).toFixed(1);
                 
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td style="text-align: left; font-weight: bold;">${store}</td>
+                    <td class="store-name">${store}</td>
                     <td>${attainment[6] || '-'}</td>
                     <td>${attainment[7] || '-'}</td>
                     <td>${attainment[8] || '-'}</td>
                     <td>${attainment[9] || '-'}</td>
                     <td>${attainment[10] || '-'}</td>
-                    <td style="font-weight: bold;">${attained}</td>
-                    <td style="color: ${progressColor}; font-weight: bold;">${achievement}%</td>
+                    <td><strong>${attained}</strong></td>
                     <td>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${Math.min(achievement, 100)}%; background: ${progressColor}"></div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="progress-bar" style="flex: 1;">
+                                <div class="progress-fill" style="width: ${Math.min(achievement, 100)}%; background: ${achievement >= 90 ? '#27ae60' : achievement >= 70 ? '#f39c12' : '#e74c3c'}"></div>
+                            </div>
+                            <span>${achievement}%</span>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
-        }
-
-        function getProgressColor(rate) {
-            if (rate >= 90) return '#27ae60';
-            if (rate >= 70) return '#f39c12';
-            return '#e74c3c';
         }
 
         function showLoading() {
@@ -329,41 +264,6 @@
         function hideLoading() {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('content').style.display = 'block';
-        }
-
-        function updateLastUpdated() {
-            const now = new Date();
-            document.getElementById('lastUpdated').textContent = 'Last updated: ' + now.toLocaleTimeString();
-        }
-
-        function showNotification(message, type) {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 4000);
-        }
-
-        function showInstructions() {
-            alert(`📖 DASHBOARD INSTRUCTIONS:
-
-1. SETUP:
-   - Replace WEB_APP_URL in the code with your actual Google Apps Script URL
-   - Make sure your Google Sheet has 3 tabs: Projection, Attainment, Yesterday
-   - Ensure the sheet is properly formatted with store names and hourly data
-
-2. USAGE:
-   - Click "Refresh Data" to load latest from Google Sheets
-   - The dashboard shows data for 6AM-10AM
-   - Charts update automatically
-
-3. TROUBLESHOOTING:
-   - If data doesn't load, check browser console for errors
-   - Verify your Sheet ID in Apps Script is correct
-   - Ensure Web App is deployed with "Anyone" access`);
         }
 
         // Load data when page loads
